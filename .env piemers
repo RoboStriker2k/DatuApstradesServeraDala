@@ -1,0 +1,10 @@
+#db config piemers prieks .env faila
+dbhost=IP adrese
+usr=lietotajs
+password= parole
+schema= datubazes shēma
+dbport= 3306
+
+
+
+
