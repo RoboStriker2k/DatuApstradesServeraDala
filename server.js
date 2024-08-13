@@ -15,10 +15,10 @@ const fs = require("fs");
 
 //funkcijas
 const editp = require("./src/js/editpost.js");
-``;
 const searchfn = require("./src/js/search.js");
 const deleteposts = require("./src/js/deleteposts.js");
 const addpost = require("./src/js/addpost.js");
+const getposts = require("./src/js/getposts.js");
 
 //config
 dotenv.config();
@@ -79,31 +79,14 @@ app.get("/api/postscount", (req, res) => {
 //define ziņojumu apstradi .
 // vispareja datu izgušanas ffunkcija bez meklešanas parametriem.
 app.get("/api/getposts", (req, res) => {
- let request = {
-  ammount: req.query.ammount || 10,
-  offset: req.query.offset || 0,
- };
- returnposts(request.ammount, request.offset, res);
+ getposts.getposts(req, res);
 });
 
-//funckija ierakstu atgriežsanai no datubazes
-function returnposts(ammount = 10, offset = 0, res) {
- offset = offset * ammount;
- conn.query("select * from lietotnes.posts limit " + ammount + " offset " + offset + "", function (err, rows, fields) {
-  if (!err) {
-   console.log("Rindas nosutitas");
-   res.send({ Status: "OK", posts: rows });
-  } else {
-   console.log("Error while performing Query.", err);
-   res.send({ Status: "Error", message: err });
-  }
- });
-}
-//------------------------------------------///////////////////////////////////
 // path uz foto glabatuvi
 let fotodir = __dirname + "\\imgpath\\database\\";
 let imgnotfounddir = __dirname + "\\src\\assets\\notfound.png";
 //////////////////////==================================////////////////////////////
+
 /// foto atgriezsana
 app.use(express.static(fotodir));
 app.use(express.static(imgnotfounddir));
@@ -126,7 +109,7 @@ app.get("/api/getfoto", (req, res) => {
  res.sendFile(pathimg);
 });
 
-//// ierakstu augsulade
+//// ierakstu augsupielāde
 
 app.use(fileupload());
 app.post("/api/addpost", (req, res) => {
@@ -153,7 +136,7 @@ app.listen(3000, (error) => {
 app.post("/search", (req, res) => {
  searchfn.search(req, res, conn);
 });
-///iegut vienu ierakstu
+///iegut tieši vienu ierakstu
 app.get("/api/getpost", (req, res) => {
  let request = {
   postiid: req.query.postiid,
@@ -170,5 +153,5 @@ app.get("/api/getpost", (req, res) => {
 ///// labot ierakstu datubaze ar vai  bez attela maiņas
 app.post("/api/editpost", (req, res) => {
  //pieprasijuma saturs
- editp.editpost(req, res, conn, fotodir);
+ editp.editpost(req, res, conn, fotodir, fs);
 });

@@ -1,17 +1,21 @@
-function editpost(req, res,conn,fotodir) {
- //pieprasijuma saturs   
+function editpost(req, res, conn, fotodir, fs) {
+ //pieprasijuma saturs
+
  let request = {
   idpost: req.body.idpost,
   title: req.body.title,
   pdesc: req.body.pdesc,
  };
+
  let ufile = false;
+ let filecount = 0;
  if (req.files) {
   request.file = req.files.file;
   ufile = true;
+  filecount = req.files.file.length;
  }
  // ja ir fails pievienots
- if (ufile) {
+ if (ufile && typeof filecount === "undefined") {
   let imgpath = Date.now() + request.file.name;
   conn.query(
    'Select imgpath FROM lietotnes.posts WHERE idposts = "' + request.idpost + '"',
@@ -52,31 +56,38 @@ function editpost(req, res,conn,fotodir) {
   );
  }
  if (request.title != null) {
-  conn.query(
-   'UPDATE lietotnes.posts SET  title = "' + request.title + '" WHERE idposts = "' + request.idpost + '"',
-   function (err) {
-    if (!err) {
-     console.log("Rinda labota title :" + request.title);
-    } else {
-     console.log("Error:", err);
-    }
-   }
-  );
+  title(conn, request);
  }
  if (request.pdesc != null) {
-  conn.query(
-   'UPDATE lietotnes.posts SET  pdesc = "' + request.pdesc + '" WHERE idposts = "' + request.idpost + '"',
-   function (err) {
-    if (!err) {
-     console.log("Rinda labota pdesc :" + request.pdesc);
-    } else {
-     console.log("Error:", err);
-    }
-   }
-  );
+  desc(conn, request);
  }
  console.log("editpost OK");
  res.send({ Status: "OK" });
+}
+
+function title(conn, request) {
+ conn.query(
+  'UPDATE lietotnes.posts SET  title = "' + request.title + '" WHERE idposts = "' + request.idpost + '"',
+  function (err) {
+   if (!err) {
+    console.log("Rinda labota title :" + request.title);
+   } else {
+    console.log("Error:", err);
+   }
+  }
+ );
+}
+function desc(conn, request) {
+ conn.query(
+  'UPDATE lietotnes.posts SET  pdesc = "' + request.pdesc + '" WHERE idposts = "' + request.idpost + '"',
+  function (err) {
+   if (!err) {
+    console.log("Rinda labota pdesc :" + request.pdesc);
+   } else {
+    console.log("Error:", err);
+   }
+  }
+ );
 }
 
 module.exports = {

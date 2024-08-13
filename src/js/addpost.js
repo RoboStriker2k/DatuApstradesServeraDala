@@ -28,7 +28,7 @@ function addpost(req, res, conn, fotodir, fs) {
  }
  // vairaku datņu auģsuplāde serverīa mapē un ievietošanadatubazē
  if (ufile && filecount > 0) {
- uploadmulti(conn, request, res, fotodir, fs,filecount,req);
+  uploadmulti(conn, request, res, fotodir, fs, filecount, req);
  }
 }
 
@@ -46,7 +46,6 @@ function uploaddata(request, res) {
    }
   }
  );
-
 }
 ///datu ievietotšana datubazē ar attelu.
 function uploaddataimg(req, res, imgpath) {
@@ -69,37 +68,36 @@ function uploaddataimg(req, res, imgpath) {
   }
  );
 }
+//vairāku attēlu ievietošanas funkcija
+function uploadmulti(conn, request, res, fotodir, fs, filecount, req) {
+ let fnamearr = {
+  images: [],
+ };
 
-function uploadmulti(conn, request, res, fotodir, fs, filecount,req) {
-    let fnamearr = {
-        images: [],
-       };
-     
-       for (let i = 0; i < filecount; i++) {
-        let imgpath = Date.now() + req.files.file[i].name;
-        fnamearr.images.push(imgpath);
-        request.file[i].mv(fotodir + imgpath, (err) => {
-         if (err) {
-          console.log(err);
-         }
-        });
-       }
-     
-       conn.query(
-        "insert into lietotnes.posts (title, pdesc,imgarr) values (?,?,?)",
-        [request.title, request.pdesc, JSON.stringify(fnamearr)],
-        function (err) {
-         if (!err) {
-          console.log("Rinda ievietota datubaze");
-          res.send({ Status: "OK" });
-         } else {
-          console.log("Error while performing Query.", err);
-          res.send({ Status: "Error:", message: err });
-         }
-        }
-       );
+ for (let i = 0; i < filecount; i++) {
+  let imgpath = Date.now() + req.files.file[i].name;
+  fnamearr.images.push(imgpath);
+  request.file[i].mv(fotodir + imgpath, (err) => {
+   if (err) {
+    console.log(err);
+   }
+  });
+ }
+
+ conn.query(
+  "insert into lietotnes.posts (title, pdesc,imgarr) values (?,?,?)",
+  [request.title, request.pdesc, JSON.stringify(fnamearr)],
+  function (err) {
+   if (!err) {
+    console.log("Rinda ievietota datubaze");
+    res.send({ Status: "OK" });
+   } else {
+    console.log("Error while performing Query.", err);
+    res.send({ Status: "Error:", message: err });
+   }
+  }
+ );
 }
-
 
 module.exports = {
  addpost,

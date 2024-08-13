@@ -18,19 +18,22 @@ function deletepost(id, conn, fotodir, fs) {
  conn.query('SELECT imgpath,imgarr FROM lietotnes.posts WHERE idposts = "' + id + '"', function (err, rows, fields) {
   if (!err) {
    let singleimg = false;
+   if (rows[0].imgarr == null) {
+    singleimg = true;
+   }
 
-   try {
-    let fotoname = rows[0].imgpath;
-
-    if (fotoname != null) {
-     singleimg = true;
-     fs.unlinkSync(fotodir + fotoname);
-     console.log("attels" + fotoname + "dzests");
-    } else {
-     console.log("Nav attela");
+   if (singleimg) {
+    try {
+     let fotoname = rows[0].imgpath;
+     if (fotoname != null) {
+      fs.unlinkSync(fotodir + fotoname);
+      console.log("attels" + fotoname + "dzests");
+     } else {
+      console.log("Nav attela");
+     }
+    } catch (error) {
+     console.log("Dzests neizdevas:", error);
     }
-   } catch (error) {
-    console.log("Dzests neizdevas:", error);
    }
    if (!singleimg) {
     try {

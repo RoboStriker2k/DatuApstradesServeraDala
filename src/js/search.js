@@ -1,5 +1,5 @@
-function search (req, res, conn) {
-    let time = new Date(Date.now());
+function search(req, res, conn) {
+ let time = new Date(Date.now());
 
  let request = {
   searchtext: req.body.searchtext || "",
