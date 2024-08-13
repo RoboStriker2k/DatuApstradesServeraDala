@@ -61,7 +61,7 @@ app.get("/api/postscount", (req, res) => {
 
  conn.query("select count(*) as postscount from lietotnes.posts", function (err, rows, fields) {
   if (!err) {
-   console.log("Rindu skaits nosutīts laiks:", time.getMinutes() + ":" + time.getSeconds());
+   console.log("Kopejais Rindu skaits "+ rows[0].postscount +"nosutīts laiks:", time.getMinutes() + ":" + time.getSeconds());
    res.send({ Status: "OK", posts: rows });
   } else {
    console.log("Error while performing Query.", err);
@@ -96,28 +96,21 @@ function returnposts(ammount = 10, offset = 0, res) {
 }
 //------------------------------------------///////////////////////////////////
 // path uz foto glabatuvi
-let fotodirold = __dirname + "\\..\\..\\imgpath\\database\\";
-
 let fotodir = __dirname + "\\imgpath\\database\\";
-console.log(fotodir);
+let imgnotfounddir = __dirname + "\\src\\assets\\notfound.png";
 //////////////////////==================================////////////////////////////
 /// foto atgriezsana
-let imgnotfounddir = __dirname + "\\src\\assets\\notfound.png";
-
 app.use(express.static(fotodir));
 app.use(express.static(imgnotfounddir));
 
 app.use("/getfoto", express.static(fotodir));
 app.get("/getfoto", (req, res) => {
-  print(fotodir + req.query.file + "getphotoproc");
  let pathimg = resolve(fotodir + req.query.file);
- 
  if (!fs.existsSync(pathimg) || req.query.file === "NaN") {
   pathimg = imgnotfounddir;
  }
  res.sendFile(pathimg);
 });
-
 app.get("/api/getfoto", (req, res) => {
  // print(fotodir + req.query.file);
  let pathimg = resolve(fotodir + req.query.file);
@@ -159,11 +152,11 @@ app.post("/api/addpost", (req, res) => {
    }
   });
  }
- // vairaku datņu auģsuplāde serverī, un datu
+ // vairaku datņu auģsuplāde serverīa mapē un ievietošanadatubazē
  if (ufile && filecount > 0) {
   let fnamearr = {
-    "images": [],
-  }
+   images: [],
+  };
 
   for (let i = 0; i < filecount; i++) {
    let imgpath = Date.now() + req.files.file[i].name;
@@ -174,9 +167,10 @@ app.post("/api/addpost", (req, res) => {
     }
    });
   }
- 
-  conn.query( 'insert into lietotnes.posts (title, pdesc,imgarr) values (?,?,?)',
-   [request.title, request.pdesc, JSON.stringify(fnamearr)], 
+
+  conn.query(
+   "insert into lietotnes.posts (title, pdesc,imgarr) values (?,?,?)",
+   [request.title, request.pdesc, JSON.stringify(fnamearr)],
    function (err) {
     if (!err) {
      console.log("Rinda ievietota datubaze");
@@ -186,11 +180,9 @@ app.post("/api/addpost", (req, res) => {
      res.send({ Status: "Error:", message: err });
     }
    }
-  )
-
+  );
  }
 });
-
 
 //datu ievietotšana datubazē bez attela.
 function uploaddata(request, res) {
@@ -208,12 +200,12 @@ function uploaddata(request, res) {
  );
 }
 ///datu ievietotšana datubazē ar attelu.
-function uploaddataimg(request, res, imgpath) {
+function uploaddataimg(req, res, imgpath) {
  conn.query(
   'INSERT INTO lietotnes.posts (title, pdesc, imgpath) VALUES ("' +
-   request.title +
-   '", "' +
-   request.pdesc +
+   req.title +
+   '","' +
+   req.pdesc +
    '", "' +
    imgpath +
    '")',
@@ -250,14 +242,13 @@ function deleteposts(idlist = []) {
  });
 }
 function deletepost(id) {
- conn.query('SELECT imgpath FROM lietotnes.posts WHERE idposts = "' + id + '"', function (err, rows, fields) {
+ conn.query('SELECT imgpath,imgarr FROM lietotnes.posts WHERE idposts = "' + id + '"', function (err, rows, fields) {
   if (!err) {
    try {
     let fotoname = rows[0].imgpath;
     print(fotoname);
     if (fotoname != null) {
      fs.unlinkSync(fotodir + fotoname);
-
      console.log("attels" + fotoname + "dzests");
     } else {
      console.log("Nav attela");
@@ -265,10 +256,20 @@ function deletepost(id) {
    } catch (error) {
     console.log("Dzests neizdevas:", error);
    }
+   try {
+    let fotoname = rows[0].imgarr.images;
+    for (let i = 0; i < fotoname.length; i++) {
+     fs.unlinkSync(fotodir + fotoname[i]);
+    }
+    console.log("Dzesta attelu kopa : " + fotoname);
+   } catch (error) {
+    console.log("Dzest att kopu neizdevas:", error);
+   }
   } else {
-   console.log("kļūme Neatrada attelu .", err);
+   console.log("kļūme Neatrada attelu datubazes saraksta .", err);
   }
  });
+
  conn.query('DELETE FROM lietotnes.posts WHERE idposts = "' + id + '"', function (err) {
   if (!err) {
    console.log("Rindas dzestas NO DB");
