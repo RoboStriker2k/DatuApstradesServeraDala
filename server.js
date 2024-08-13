@@ -102,13 +102,29 @@ let fotodir = __dirname + "\\imgpath\\database\\";
 console.log(fotodir);
 //////////////////////==================================////////////////////////////
 /// foto atgriezsana
+let imgnotfounddir = __dirname + "\\src\\assets\\notfound.png";
+
+app.use(express.static(fotodir));
+app.use(express.static(imgnotfounddir));
 
 app.use("/getfoto", express.static(fotodir));
-app.use(express.static(fotodir));
+app.get("/getfoto", (req, res) => {
+  print(fotodir + req.query.file + "getphotoproc");
+ let pathimg = resolve(fotodir + req.query.file);
+ 
+ if (!fs.existsSync(pathimg) || req.query.file === "NaN") {
+  pathimg = imgnotfounddir;
+ }
+ res.sendFile(pathimg);
+});
 
 app.get("/api/getfoto", (req, res) => {
  // print(fotodir + req.query.file);
  let pathimg = resolve(fotodir + req.query.file);
+ console.log(pathimg);
+ if (!fs.existsSync(pathimg) || req.query.file === "NaN") {
+  pathimg = imgnotfounddir;
+ }
  res.sendFile(pathimg);
 });
 
@@ -123,25 +139,59 @@ app.post("/api/addpost", (req, res) => {
   pdesc: req.body.pdesc,
  };
  let ufile = false;
+ let filecount = 0;
  if (req.files) {
   request.file = req.files.file;
   ufile = true;
+  filecount = req.files.file.length;
  }
  if (!ufile) {
   uploaddata(request, res);
- } else {
+ } else if (ufile && typeof filecount === "undefined") {
   let imgpath = Date.now() + request.file.name; /// iegust augsupladejama faila nosaukumu, kas nodrosina faila neatkartotību
   //print(imgpath)
   uploaddataimg(request, res, imgpath); // datu ievietotšana datubazē.
 
-  // faila ievietošana failu glabatuve
+  //vienas datnes ievietošana datņu glabatuve
   request.file.mv(fotodir + imgpath, (err) => {
    if (err) {
     console.log(err);
    }
   });
  }
+ // vairaku datņu auģsuplāde serverī, un datu
+ if (ufile && filecount > 0) {
+  let fnamearr = {
+    "images": [],
+  }
+
+  for (let i = 0; i < filecount; i++) {
+   let imgpath = Date.now() + req.files.file[i].name;
+   fnamearr.images.push(imgpath);
+   request.file[i].mv(fotodir + imgpath, (err) => {
+    if (err) {
+     console.log(err);
+    }
+   });
+  }
+ 
+  conn.query( 'insert into lietotnes.posts (title, pdesc,imgarr) values (?,?,?)',
+   [request.title, request.pdesc, JSON.stringify(fnamearr)], 
+   function (err) {
+    if (!err) {
+     console.log("Rinda ievietota datubaze");
+     res.send({ Status: "OK" });
+    } else {
+     console.log("Error while performing Query.", err);
+     res.send({ Status: "Error:", message: err });
+    }
+   }
+  )
+
+ }
 });
+
+
 //datu ievietotšana datubazē bez attela.
 function uploaddata(request, res) {
  conn.query(
@@ -300,9 +350,9 @@ app.post("/api/editpost", (req, res) => {
  };
  let ufile = false;
  if (req.files) {
-    request.file = req.files.file;
-    ufile = true;
-   }
+  request.file = req.files.file;
+  ufile = true;
+ }
  // ja ir fails pievienots
  if (ufile) {
   let imgpath = Date.now() + request.file.name;
@@ -368,6 +418,6 @@ app.post("/api/editpost", (req, res) => {
    }
   );
  }
-print ("editpost OK");
+ print("editpost OK");
  res.send({ Status: "OK" });
 });
