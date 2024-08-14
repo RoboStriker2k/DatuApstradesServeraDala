@@ -114,7 +114,6 @@ function removepic(conn, req, fotodir, fs) {
  }
  if (singleimg) {
   try {
-   console.log(re.imgpath);
    let fotoname = re.imgpath;
    if (fotoname != null) {
     fs.unlinkSync(fotodir + fotoname);
@@ -146,7 +145,9 @@ function removepic(conn, req, fotodir, fs) {
    } catch (error) {
     console.log("Dzests neizdevas:", error);
    }
-   let origarr = [];
+   let origarr = {
+    images: [],
+   };
    let noarry = false;
    conn.query('select imgarr from lietotnes.posts where idposts = "' + re.idpost + '"', function (err, rows, fields) {
     if (!err) {
@@ -185,22 +186,40 @@ function addpicarr(conn, req, fotodir, fs) {
  let origarr = {
   images: [],
  };
+ console.log ("before");
+ console.log(origarr);
  let noarry = false;
  conn.query('select imgarr from lietotnes.posts where idposts = "' + re.idpost + '"', function (err, rows, fields) {
   if (!err) {
    origarr = rows[0].imgarr;
+   console.log("query")
    console.log(origarr);
-   if (origarr == null) {
+   if (!origarr.images ) {
+    console.log("failed query")
     origarr = {
      images: [],
     };
    }
+   for (let i = 0; i < re.filearr.length; i++) {
+    let imgpath = Date.now() + re.filearr[i].name;
+    origarr.images.push(imgpath);
+    re.filearr[i].mv(fotodir + imgpath, (err) => {
+     if (err) {
+      console.log(err);
+     }
+    });
+   }
+
+
+   updateimgarr(conn, origarr,re);
   } else {
    console.log("Error:", err);
    noarry = true;
   }
  });
- if (!noarry) {
+ console.log("between");
+ console.log(origarr);
+ if (noarry) {
   for (let i = 0; i < re.filearr.length; i++) {
    let imgpath = Date.now() + re.filearr[i].name;
    origarr.images.push(imgpath);
@@ -210,18 +229,23 @@ function addpicarr(conn, req, fotodir, fs) {
     }
    });
   }
-  conn.query(
-   "update lietotnes.posts set imgarr = ? where idposts = ?",
-   [JSON.stringify(origarr), re.idpost],
-   function (err) {
-    if (!err) {
-     console.log("Rinda " + re.idpost + " labota , attelu kopa izmainita :" + origarr);
-    } else {
-     console.log("Error:", err);
-    }
-   }
-  );
+  updateimgarr(conn, origarr,re);
+
  }
+}
+
+function updateimgarr(conn, origarr,re){
+    conn.query(
+        "update lietotnes.posts set imgarr = ? where idposts = ?",
+        [JSON.stringify(origarr), re.idpost],
+        function (err) {
+         if (!err) {
+          console.log("Rinda " + re.idpost + " labota , attelu kopa izmainita :" + origarr.images);
+         } else {
+          console.log("Error:", err);
+         }
+        }
+       );
 }
 
 module.exports = {
