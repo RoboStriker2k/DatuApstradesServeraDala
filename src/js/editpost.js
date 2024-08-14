@@ -16,7 +16,7 @@ function editpost(req, res, conn, fotodir, fs) {
  }
  // ja ir fails pievienots
  if (ufile && typeof filecount === "undefined") {
- replacepic(conn, request, fotodir, fs);
+  replacepic(conn, request, fotodir, fs);
  }
  if (request.title != null) {
   title(conn, request);
@@ -24,14 +24,13 @@ function editpost(req, res, conn, fotodir, fs) {
  if (request.pdesc != null) {
   desc(conn, request);
  }
-if (req.body.removeflag == "true") {
- removepic(conn, req, fotodir, fs);
-}
-
- if (ufile && filecount > 0) {
-    addpicarr(conn, req, fotodir, fs);
+ if (req.body.removeflag == "true") {
+  removepic(conn, req, fotodir, fs);
  }
 
+ if (ufile && filecount > 0) {
+  addpicarr(conn, req, fotodir, fs);
+ }
 
  console.log("editpost OK");
  res.send({ Status: "OK" });
@@ -51,46 +50,45 @@ function title(conn, request) {
 }
 
 function replacepic(conn, request, fotodir, fs) {
-    let imgpath = Date.now() + request.file.name;
-    conn.query(
-     'Select imgpath FROM lietotnes.posts WHERE idposts = "' + request.idpost + '"',
-     function (err, rows, fields) {
-      if (!err) {
-       try {
-        let fotoname = rows[0].imgpath;
-        if (fotoname != null) {
-         fs.unlinkSync(fotodir + fotoname);
-         console.log("attels" + fotoname + " dzests");
-        } else {
-         console.log("Nav attela");
-        }
-       } catch (error) {
-        console.log("Dzests neizdevas:", error);
-       }
-      } else {
-       console.log("kļūme Neatrada attelu .", err);
-      }
-     }
-    );
-    request.file.mv(fotodir + imgpath, (err) => {
-     if (err) {
-      console.log(err);
+ let imgpath = Date.now() + request.file.name;
+ conn.query(
+  'Select imgpath FROM lietotnes.posts WHERE idposts = "' + request.idpost + '"',
+  function (err, rows, fields) {
+   if (!err) {
+    try {
+     let fotoname = rows[0].imgpath;
+     if (fotoname != null) {
+      fs.unlinkSync(fotodir + fotoname);
+      console.log("attels" + fotoname + " dzests");
      } else {
-      console.log("attels" + imgpath + " uz diska");
+      console.log("Nav attela");
      }
-    });
-    conn.query(
-     'UPDATE lietotnes.posts SET  imgpath = "' + imgpath + '" WHERE idposts = "' + request.idpost + '"',
-     function (err) {
-      if (!err) {
-       console.log("Rinda labota imgpath :" + imgpath);
-      } else {
-       console.log("Error:", err);
-      }
-     }
-    );
- }
-
+    } catch (error) {
+     console.log("Dzests neizdevas:", error);
+    }
+   } else {
+    console.log("kļūme Neatrada attelu .", err);
+   }
+  }
+ );
+ request.file.mv(fotodir + imgpath, (err) => {
+  if (err) {
+   console.log(err);
+  } else {
+   console.log("attels" + imgpath + " uz diska");
+  }
+ });
+ conn.query(
+  'UPDATE lietotnes.posts SET  imgpath = "' + imgpath + '" WHERE idposts = "' + request.idpost + '"',
+  function (err) {
+   if (!err) {
+    console.log("Rinda labota imgpath :" + imgpath);
+   } else {
+    console.log("Error:", err);
+   }
+  }
+ );
+}
 
 function desc(conn, request) {
  conn.query(
@@ -116,7 +114,7 @@ function removepic(conn, req, fotodir, fs) {
  }
  if (singleimg) {
   try {
-    console.log(re.imgpath);
+   console.log(re.imgpath);
    let fotoname = re.imgpath;
    if (fotoname != null) {
     fs.unlinkSync(fotodir + fotoname);
@@ -184,17 +182,17 @@ function addpicarr(conn, req, fotodir, fs) {
   idpost: req.body.idpost,
   filearr: req.files.file,
  };
-let origarr = {
-    images: [],
-};
+ let origarr = {
+  images: [],
+ };
  let noarry = false;
  conn.query('select imgarr from lietotnes.posts where idposts = "' + re.idpost + '"', function (err, rows, fields) {
   if (!err) {
    origarr = rows[0].imgarr;
-   console.log (origarr);
+   console.log(origarr);
    if (origarr == null) {
- origarr = {
-        images: [],
+    origarr = {
+     images: [],
     };
    }
   } else {
