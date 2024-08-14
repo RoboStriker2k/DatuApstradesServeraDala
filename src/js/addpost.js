@@ -13,11 +13,11 @@ function addpost(req, res, conn, fotodir, fs) {
   filecount = req.files.file.length;
  }
  if (!ufile) {
-  uploaddata(request, res);
+  uploaddata(request, res,conn);
  } else if (ufile && typeof filecount === "undefined") {
   let imgpath = Date.now() + request.file.name; /// iegust augsupladejama faila nosaukumu, kas nodrosina faila neatkartotību
   //print(imgpath)
-  uploaddataimg(request, res, imgpath); // datu ievietotšana datubazē.
+  uploaddataimg(request, res, imgpath,conn); // datu ievietotšana datubazē.
 
   //vienas datnes ievietošana datņu glabatuve
   request.file.mv(fotodir + imgpath, (err) => {
@@ -33,7 +33,7 @@ function addpost(req, res, conn, fotodir, fs) {
 }
 
 //datu ievietotšana datubazē bez attela.
-function uploaddata(request, res) {
+function uploaddata(request, res,conn) {
  conn.query(
   'INSERT INTO lietotnes.posts (title, pdesc) VALUES ("' + request.title + '", "' + request.pdesc + '")',
   function (err) {
@@ -48,7 +48,7 @@ function uploaddata(request, res) {
  );
 }
 ///datu ievietotšana datubazē ar attelu.
-function uploaddataimg(req, res, imgpath) {
+function uploaddataimg(req, res, imgpath,conn) {
  conn.query(
   'INSERT INTO lietotnes.posts (title, pdesc, imgpath) VALUES ("' +
    req.title +
@@ -89,7 +89,7 @@ function uploadmulti(conn, request, res, fotodir, fs, filecount, req) {
   [request.title, request.pdesc, JSON.stringify(fnamearr)],
   function (err) {
    if (!err) {
-    console.log("Rinda ievietota datubaze");
+    console.log("Rinda ar attkopu ievietota datubaze");
     res.send({ Status: "OK" });
    } else {
     console.log("Error while performing Query.", err);
