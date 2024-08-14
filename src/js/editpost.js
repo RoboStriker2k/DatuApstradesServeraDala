@@ -177,14 +177,19 @@ function addpicarr(conn, req, fotodir, fs) {
  };
  conn.query('select imgarr from lietotnes.posts where idposts = "' + re.idpost + '"', function (err, rows, fields) {
   if (!err) {
-   origarr = rows[0].imgarr;
-
-   if (origarr == null) {
+  let newarr = rows[0].imgarr;
+   console.log( "orig:", origarr); 
+   console.log("newarr:", newarr);
+   if (newarr == null || newarr.length == 0) {
     console.log("no arr");
     origarr = {
      images: [],
     };
    }
+   else {
+    origarr = newarr;
+   }
+   console.log("newarr:", origarr);
    for (let i = 0; i < re.filearr.length; i++) {
     let imgpath = Date.now() + re.filearr[i].name;
     origarr.images.push(imgpath);
