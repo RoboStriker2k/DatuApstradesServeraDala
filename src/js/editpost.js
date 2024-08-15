@@ -156,7 +156,9 @@ function removepic(conn, req, fotodir, fs) {
     if (origarr.images != null) {
     let index = origarr.images.indexOf(re.imgarr);
     console.log("index :", index);
-    newarr = origarr.images.splice(index, 1);
+    if (index != -1) {
+      newarr = origarr.images.splice(index, 1);
+     }
    }}
 
    console.log("newarr after :", newarr);
@@ -212,6 +214,7 @@ function updateimgarr(conn, origarr, re) {
        images: [],
       };
     }
+    console.log ("arr before import to db",origarr)
  conn.query(
   "update lietotnes.posts set imgarr = ? where idposts = ?",
   [JSON.stringify(origarr), re.idpost],
