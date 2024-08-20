@@ -108,7 +108,7 @@ function removepicfromdisc(fotoname, fs, fotodir) {
 function removepic(conn, req, fotodir, fs) {
  let re = {
   idpost: req.body.idpost,
-  imgarr: req.body.imgarr,
+  imgarr: JSON.parse(req.body.imgarr),
   imgpath: req.body.imgpath,
  };
  let origarr = {
@@ -140,26 +140,24 @@ function removepic(conn, req, fotodir, fs) {
     };
    }
    let newarr = JSON.parse(JSON.stringify(origarr));
-   console.log("newarr:", newarr);
    if (re.imgarr != null && typeof re.imgarr === "object") {
     for (let i = 0; i < re.imgarr.length; i++) {
      let fotoname = re.imgarr[i];
      removepicfromdisc(fotoname, fs, fotodir);
-     if (origarr.images != null) {
-      let index = origarr.images.indexOf(fotoname);
-
-      if (index != -1) {
-       newarr = origarr.images.splice(index, 1);
+     if (newarr.images != null) {
+      let index = newarr.images.indexOf(fotoname);
+      if (index > -1) {
+     newarr.images.splice(index, 1);
       }
      }
     }
    }
    if (re.imgarr != null && typeof re.imgarr === "string") {
-    if (origarr.images != null) {
-     let index = origarr.images.indexOf(re.imgarr);
+    if (newarr.images != null) {
+     let index = newarr.images.indexOf(re.imgarr);
      console.log("index :", index);
      if (index != -1) {
-      newarr = origarr.images.splice(index, 1);
+      newarr.images.splice(index, 1);
      }
     }
    }
@@ -183,8 +181,7 @@ function addpicarr(conn, req, fotodir, fs) {
  conn.query('select imgarr from lietotnes.posts where idposts = "' + re.idpost + '"', function (err, rows, fields) {
   if (!err) {
    let newarr = rows[0].imgarr;
-   console.log("orig:", origarr);
-   console.log("newarr:", newarr);
+
    if (newarr == null || newarr.length == 0) {
     console.log("no arr");
     origarr = {
@@ -197,9 +194,7 @@ function addpicarr(conn, req, fotodir, fs) {
    } else {
     origarr = newarr;
    }
-   console.log("newarr:", origarr);
-   console.log("re.filearr:", re.filearr);
-   console.log("re.filearr.length:", re.filearr.length);
+
    if (re.filearr.length == "undefined") {
     re.filearr[0].mv(fotodir + Date.now() + re.filearr[0].name, (err) => {
      if (err) {
