@@ -132,8 +132,6 @@ function removepic(conn, req, fotodir, fs) {
  conn.query('select imgarr from lietotnes.posts where idposts = "' + re.idpost + '"', function (err, rows, fields) {
   if (!err) {
    origarr = rows[0].imgarr;
-
-   console.log("orig:", origarr);
    if (origarr == null) {
     origarr = {
      images: [],
@@ -162,7 +160,7 @@ function removepic(conn, req, fotodir, fs) {
     }
    }
 
-   console.log("newarr after :", newarr);
+
    updateimgarr(conn, newarr, re);
   } else {
    console.log("Error:", err);
