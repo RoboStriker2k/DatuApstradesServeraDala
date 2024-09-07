@@ -180,6 +180,11 @@ function addpicarr(conn, req, fotodir, fs) {
   if (!err) {
    let newarr = rows[0].imgarr;
 
+   if (newarr == null) {
+    newarr = {
+     images: [],
+    };
+   }
    if (newarr == null || newarr.length == 0) {
     console.log("no arr");
     origarr = {
@@ -202,6 +207,7 @@ function addpicarr(conn, req, fotodir, fs) {
    } else {
     for (let i = 0; i < re.filearr.length; i++) {
      let imgpath = Date.now() + re.filearr[i].name;
+     
      origarr.images.push(imgpath);
      re.filearr[i].mv(fotodir + imgpath, (err) => {
       if (err) {

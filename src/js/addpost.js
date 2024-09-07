@@ -38,6 +38,14 @@ function uploaddata(request, res,conn) {
  );
 }
 
+function generatefilename(name){
+    let testname= name
+    testname= testname.split(".")
+    let filetime= Date.now()+"_"
+  let imgpath = filetime +  Math.floor(Math.random()*100) + "." + testname[1];
+return imgpath
+}
+
 //vairāku attēlu ievietošanas funkcija
 function uploadmulti(conn, request, res, fotodir, fs, filecount, req) {
  let fnamearr = {
@@ -45,7 +53,8 @@ function uploadmulti(conn, request, res, fotodir, fs, filecount, req) {
  };
  if (typeof(filecount)!=="undefined"){
  for (let i = 0; i < filecount; i++) {
-  let imgpath = Date.now() + req.files.file[i].name;
+
+  let imgpath = generatefilename(request.file[i].name);
   fnamearr.images.push(imgpath);
   request.file[i].mv(fotodir + imgpath, (err) => {
    if (err) {
@@ -55,7 +64,7 @@ function uploadmulti(conn, request, res, fotodir, fs, filecount, req) {
  }
 }
 if (typeof(filecount)==="undefined"){
-    let imgpath = Date.now() + request.file.name;
+  let imgpath = generatefilename(request.file.name);
     fnamearr.images.push(imgpath)
     request.file.mv(fotodir + imgpath, (err) => {
         if (err) {
