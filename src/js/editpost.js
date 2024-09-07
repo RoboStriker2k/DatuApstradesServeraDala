@@ -15,7 +15,7 @@ function editpost(req, res, conn, fotodir, fs) {
   filecount = req.files.file.length;
  }
  // ja ir fails pievienots
- if (ufile && typeof filecount === "undefined") {
+ if (ufile && req.body.replaceflag == "true") {
   replacepic(conn, request, fotodir, fs);
  }
  if (request.title != null) {
@@ -28,7 +28,8 @@ function editpost(req, res, conn, fotodir, fs) {
   removepic(conn, req, fotodir, fs);
  }
 
- if (ufile && filecount > 0) {
+ if (ufile && req.body.replaceflag == "false") {
+  console.log("addpicc called");
   addpicarr(conn, req, fotodir, fs);
  }
 
@@ -107,7 +108,7 @@ function removepicfromdisc(fotoname, fs, fotodir) {
 function removepic(conn, req, fotodir, fs) {
  let re = {
   idpost: req.body.idpost,
-  imgarr: req.body.imgarr,
+  imgarr: JSON.parse(req.body.imgarr),
   imgpath: req.body.imgpath,
  };
  let origarr = {
@@ -131,37 +132,35 @@ function removepic(conn, req, fotodir, fs) {
  conn.query('select imgarr from lietotnes.posts where idposts = "' + re.idpost + '"', function (err, rows, fields) {
   if (!err) {
    origarr = rows[0].imgarr;
-
-   console.log("orig:", origarr);
    if (origarr == null) {
     origarr = {
      images: [],
     };
    }
    let newarr = JSON.parse(JSON.stringify(origarr));
-   console.log("newarr:", newarr);
    if (re.imgarr != null && typeof re.imgarr === "object") {
     for (let i = 0; i < re.imgarr.length; i++) {
      let fotoname = re.imgarr[i];
      removepicfromdisc(fotoname, fs, fotodir);
-     if (origarr.images != null) {
-     let index = origarr.images.indexOf(fotoname);
-
-     if (index != -1) {
-      newarr = origarr.images.splice(index, 1);
-     }}
+     if (newarr.images != null) {
+      let index = newarr.images.indexOf(fotoname);
+      if (index > -1) {
+     newarr.images.splice(index, 1);
+      }
+     }
     }
    }
    if (re.imgarr != null && typeof re.imgarr === "string") {
-    if (origarr.images != null) {
-    let index = origarr.images.indexOf(re.imgarr);
-    console.log("index :", index);
-    if (index != -1) {
-      newarr = origarr.images.splice(index, 1);
+    if (newarr.images != null) {
+     let index = newarr.images.indexOf(re.imgarr);
+     console.log("index :", index);
+     if (index != -1) {
+      newarr.images.splice(index, 1);
      }
-   }}
+    }
+   }
 
-   console.log("newarr after :", newarr);
+
    updateimgarr(conn, newarr, re);
   } else {
    console.log("Error:", err);
@@ -179,27 +178,43 @@ function addpicarr(conn, req, fotodir, fs) {
  };
  conn.query('select imgarr from lietotnes.posts where idposts = "' + re.idpost + '"', function (err, rows, fields) {
   if (!err) {
-  let newarr = rows[0].imgarr;
-   console.log( "orig:", origarr); 
-   console.log("newarr:", newarr);
+   let newarr = rows[0].imgarr;
+
+   if (newarr == null) {
+    newarr = {
+     images: [],
+    };
+   }
    if (newarr == null || newarr.length == 0) {
     console.log("no arr");
     origarr = {
      images: [],
     };
+    convertimgathtoarr(conn, re);
    }
-   else {
+   if (newarr != null && newarr.length == 1) {
+    origarr.images.push(newarr[0]);
+   } else {
     origarr = newarr;
    }
-   console.log("newarr:", origarr);
-   for (let i = 0; i < re.filearr.length; i++) {
-    let imgpath = Date.now() + re.filearr[i].name;
-    origarr.images.push(imgpath);
-    re.filearr[i].mv(fotodir + imgpath, (err) => {
+
+   if (re.filearr.length == "undefined") {
+    re.filearr[0].mv(fotodir + Date.now() + re.filearr[0].name, (err) => {
      if (err) {
       console.log(err);
      }
     });
+   } else {
+    for (let i = 0; i < re.filearr.length; i++) {
+     let imgpath = Date.now() + re.filearr[i].name;
+     
+     origarr.images.push(imgpath);
+     re.filearr[i].mv(fotodir + imgpath, (err) => {
+      if (err) {
+       console.log(err);
+      }
+     });
+    }
    }
    updateimgarr(conn, origarr, re);
   } else {
@@ -209,12 +224,12 @@ function addpicarr(conn, req, fotodir, fs) {
 }
 
 function updateimgarr(conn, origarr, re) {
-    if (origarr == null || origarr==[]) {
-      origarr = {
-       images: [],
-      };
-    }
-    console.log ("arr before import to db",origarr)
+ if (origarr == null || origarr == []) {
+  origarr = {
+   images: [],
+  };
+ }
+ console.log("arr before import to db", origarr);
  conn.query(
   "update lietotnes.posts set imgarr = ? where idposts = ?",
   [JSON.stringify(origarr), re.idpost],
@@ -226,6 +241,32 @@ function updateimgarr(conn, origarr, re) {
    }
   }
  );
+}
+
+function convertimgathtoarr(conn, req) {
+ conn.query('select imgpath from lietotnes.posts where idposts = "' + req.idpost + '"', function (err, rows, fields) {
+  if (!err) {
+   let imgpath = rows[0].imgpath;
+   if (imgpath != null) {
+    let imgarr = {
+     images: [],
+    };
+    imgarr.images.push(imgpath);
+    conn.query(
+     "update lietotnes.posts set imgarr = ? where idposts = ?",
+     [JSON.stringify(imgarr), req.idpost],
+     function (err) {
+      if (!err) {
+       console.log("Rinda " + req.idpost + " izmainita");
+      } else {
+       console.log("Error:", err);
+      }
+      conn.query('update lietotnes.posts set imgpath = null where idposts = "' + req.idpost + '"', function (err) {});
+     }
+    );
+   }
+  }
+ });
 }
 
 module.exports = {
