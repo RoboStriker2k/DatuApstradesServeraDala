@@ -28,7 +28,7 @@ function search(req, res, conn) {
    "",
   function (err, rows, fields) {
    if (!err) {
-    console.log("Meklet FN OK:", time.getMinutes() + ":" + time.getSeconds());
+    console.log("Meklet FN OK:", time.getMinutes() + ":" + time.getSeconds()+ "|" +time.getMilliseconds());
     res.send({ Status: "OK", posts: rows, count: count });
    } else {
     console.log("Meklesanas kļūme.", err);

@@ -19,14 +19,15 @@ const searchfn = require("./src/js/search.js");
 const deleteposts = require("./src/js/deleteposts.js");
 const addpost = require("./src/js/addpost.js");
 const getposts = require("./src/js/getposts.js");
-
+const postscount= require("./src/js/postcount.js")
 //config
 dotenv.config();
+const config=process.env
 const conn = mysql.createConnection({
- host: process.env.host,
- user: process.env.usr,
- password: process.env.password,
- port: process.env.port,
+ host: config.host,
+ user: config.usr,
+ password: config.password,
+ port: config.port,
 });
 
 conn.connect((error) => {
@@ -36,14 +37,8 @@ conn.connect((error) => {
   console.log("Connected!");
  }
 });
-/*
-// db vaicajuma tests
-let res = conn.query('SELECT * FROM lietotnes.posts', function (err, rows, fields) {
-    if (!err)
-        console.log( rows);
-    else
-        console.log('Error while performing Query.', err );
-});*/
+/* // db vaicajuma tests
+let res = conn.query('SELECT * FROM lietotnes.posts', function (err, rows, fields) {if (!err) console.log( rows); elseconsole.log('Error while performing Query.', err );});*/
 
 ///express servera uzstade
 const app = express();
@@ -57,69 +52,36 @@ app.use((req, res, next) => {
  next();
 });
 
-//lapu skaits
+//Ierakstu skaita atgriežsanas funckija
 app.get("/api/postscount", (req, res) => {
- let time = new Date(Date.now());
-
- conn.query("select count(*) as postscount from lietotnes.posts", function (err, rows, fields) {
-  if (!err) {
-   console.log(
-    "Kopejais Rindu skaits " + rows[0].postscount + "nosutīts laiks:",
-    time.getMinutes() + ":" + time.getSeconds()
-   );
-   res.send({ Status: "OK", posts: rows });
-  } else {
-   console.log("Error while performing Query.", err);
-   res.send({ Status: "Error", message: err });
-  }
- });
+ postscount.getpostcount(conn,res)
 });
 
-//------------------------------------------///////////////////////////////////
-//define ziņojumu apstradi .
 // vispareja datu izgušanas ffunkcija bez meklešanas parametriem.
 app.get("/api/getposts", (req, res) => {
- getposts.getposts(req, res);
+ getposts.getposts(req, res,conn);
 });
 
 // path uz foto glabatuvi
 let fotodir = __dirname + "\\imgpath\\database\\";
 let imgnotfounddir = __dirname + "\\src\\assets\\notfound.png";
-//////////////////////==================================////////////////////////////
-
-/// foto atgriezsana
-app.use(express.static(fotodir));
+/// foto atgriezsana no foto datņu mapes
 app.use(express.static(imgnotfounddir));
-
-app.use("/getfoto", express.static(fotodir));
-app.get("/getfoto", (req, res) => {
- let pathimg = resolve(fotodir + req.query.file);
- if (!fs.existsSync(pathimg) || req.query.file === "NaN") {
-  pathimg = imgnotfounddir;
- }
- res.sendFile(pathimg);
-});
-app.get("/api/getfoto", (req, res) => {
- // print(fotodir + req.query.file);
- let pathimg = resolve(fotodir + req.query.file);
- console.log(pathimg);
- if (!fs.existsSync(pathimg) || req.query.file === "NaN") {
-  pathimg = imgnotfounddir;
- }
- res.sendFile(pathimg);
+app.get(["/getfoto","/api/getfoto"], (req, res) => {
+    let pathimg = resolve(fotodir + req.query.file);
+    if (!fs.existsSync(pathimg) || req.query.file === "NaN") {
+     pathimg = imgnotfounddir;
+    }
+    res.sendFile(pathimg);
 });
 
 //// ierakstu augsupielāde
-
 app.use(fileupload());
 app.post("/api/addpost", (req, res) => {
  addpost.addpost(req, res, conn, fotodir, fs);
 });
 
-/// ---===========-------------/////
-
 // dzest ierakstus datubaze
-
 app.post("/api/deleteposts", (req, res) => {
  deleteposts.entry(req, res, conn, fotodir, fs);
 });
@@ -138,17 +100,7 @@ app.post("/search", (req, res) => {
 });
 ///iegut tieši vienu ierakstu
 app.get("/api/getpost", (req, res) => {
- let request = {
-  postiid: req.query.postiid,
- };
- conn.query('SELECT * FROM lietotnes.posts WHERE idposts = "' + request.postiid + '"', function (err, rows, fields) {
-  if (!err) {
-   res.send({ Status: "OK", posts: rows });
-  } else {
-   console.log("Error while performing Query.", err);
-   res.send({ Status: "Error", message: err });
-  }
- });
+ getposts.getpost( req,res,conn)
 });
 ///// labot ierakstu datubaze ar vai  bez attela maiņas
 app.post("/api/editpost", (req, res) => {
