@@ -107,17 +107,3 @@ app.post("/api/editpost", (req, res) => {
  //pieprasijuma saturs
  editp.editpost(req, res, conn, fotodir, fs);
 });
-
-
-
-if (fs.existsSync(__dirname + '/src/lietotnes/vue/')) {
-    app.use("/vue/", express.static("./src/lietotnes/vue/"));
- }
- if (fs.existsSync(__dirname + '/src/lietotnes/react/')) {
-    app.use("/react/", express.static("./src/lietotnes/react/"));
- }
- if (fs.existsSync(__dirname + '/src/lietotnes/angular/')) {
-    app.use("/angular/", express.static("./src/lietotnes/angular/"));
- }
-
-    app.use("/css", express.static("./src/assets/"));
