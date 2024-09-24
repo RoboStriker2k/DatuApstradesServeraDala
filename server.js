@@ -87,11 +87,11 @@ app.post("/api/deleteposts", (req, res) => {
 });
 
 //define portu express serverim un klūdas izziņošanu.
-app.listen(3000, (error) => {
+app.listen(config.dataserver_port, (error) => {
  if (error) {
   console.log(error);
  } else {
-  console.log("Server running on port 3000");
+  console.log("Data Server running on port: "+config.dataserver_port);
  }
 });
 // ierakstu iegušans funkcijas deklarācija express
@@ -107,3 +107,30 @@ app.post("/api/editpost", (req, res) => {
  //pieprasijuma saturs
  editp.editpost(req, res, conn, fotodir, fs);
 });
+
+
+
+
+
+const app2 = express();
+app2.use((req, res, next) => {
+   res.setHeader("Access-Control-Allow-Origin", "*");
+   res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
+   );
+   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+   next();
+  });
+  app2.listen(config.app_server_port, (err) => {if (err) {console.log(err);} else {console.log("WEB Server running on port: "+config.app_server_port);}});
+  if (fs.existsSync(__dirname + '/src/lietotnes/vue/')) {
+      app2.use("/vue/", express.static("./src/lietotnes/vue/"));
+   }
+   if (fs.existsSync(__dirname + '/src/lietotnes/react/')) {
+      app2.use("/react/", express.static("./src/lietotnes/react/"));
+   }
+   if (fs.existsSync(__dirname + '/src/lietotnes/angular/')) {
+      app2.use("/angular/", express.static("./src/lietotnes/angular/"));
+   }
+   app2.use("/css", express.static("./src/assets/"));
+  
