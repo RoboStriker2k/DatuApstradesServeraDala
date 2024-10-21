@@ -1,2 +1,3 @@
-start node server.js; 
-start node webserver.js;
+@echo off
+node .\server.js 
+pause
